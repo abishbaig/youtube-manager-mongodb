@@ -3,11 +3,17 @@ from time import sleep
 import getpass
 import os
 from bson import ObjectId
+from dotenv import load_dotenv
+
+load_dotenv()
+
+db_username = os.environ.get("DB_USERNAME")
+db_password = os.environ.get("DB_PASSWORD")
 
 sub_sign_count = 60
 sleep_time = 2
 
-client = MongoClient("mongodb+srv://ytpyab:ytpyab@tutorialcluster.1p9uugg.mongodb.net/", tlsAllowInvalidCertificates=True)
+client = MongoClient(f"mongodb+srv://{db_username}:{db_password}@tutorialcluster.1p9uugg.mongodb.net/", tlsAllowInvalidCertificates=True)
 
 db = client["ytmanager"]
 
