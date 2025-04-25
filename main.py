@@ -1,25 +1,33 @@
-from pymongo import MongoClient
-from time import sleep
-import getpass
-import os
-from bson import ObjectId
-from dotenv import load_dotenv
+from pymongo import MongoClient      # MongoDB client for Python
+from time import sleep              # To introduce delays
+import getpass                      # To pause the screen until user presses Enter
+import os                           # For clearing the terminal
+from bson import ObjectId           # To work with MongoDB document IDs
+from dotenv import load_dotenv      # To load environment variables from .env file
 
+# Load environment variables
 load_dotenv()
 
+# Fetch DB credentials securely
 db_username = os.environ.get("DB_USERNAME")
 db_password = os.environ.get("DB_PASSWORD")
 
+# UI and delay settings
 sub_sign_count = 60
 sleep_time = 2
 
-client = MongoClient(f"mongodb+srv://{db_username}:{db_password}@tutorialcluster.1p9uugg.mongodb.net/", tlsAllowInvalidCertificates=True)
+# MongoDB connection (with certificate warning bypass)
+client = MongoClient(
+    f"mongodb+srv://{db_username}:{db_password}@tutorialcluster.1p9uugg.mongodb.net/",
+    tlsAllowInvalidCertificates=True
+)
 
+# Select database and collection
 db = client["ytmanager"]
-
 video_collections = db["videos"]
 
-# Display all stored videos in a tabular format
+# ---------------------- Display All Videos ----------------------
+
 def list_all_Videos():
     sub_sign_count = 100
     print("-" * sub_sign_count)
@@ -28,23 +36,23 @@ def list_all_Videos():
     print("ID\t\t\t\tName\t\tDuration(min)")
     print("-" * sub_sign_count)
 
+    # Display each video as a row
     for video in video_collections.find():
-        print(f"{video["_id"]}\t{video["video_name"]}\t\t{video["video_duration"]}")
+        print(f"{video['_id']}\t{video['video_name']}\t\t{video['video_duration']}")
 
     print("-" * sub_sign_count)
 
-# --------------------- Utility Functions ---------------------
+# ---------------------- Utility Functions ----------------------
 
-# Check if a video with the same title (case-insensitive) already exists
+# Check if a video with the same name already exists
 def video_already_present(video_name):
     for video in video_collections.find():
         if video["video_name"] == video_name:
             return True
     return False
 
-# --------------------- Core Functionalities ---------------------
+# ---------------------- Add New Video ----------------------
 
-# Add a new video entry if it doesn't already exist
 def add_video():
     print("-" * sub_sign_count)
     print("\tADD VIDEO MENU")
@@ -53,6 +61,7 @@ def add_video():
     video_name = input("Enter Video Title: ")
     video_duration = input("Enter Video Duration: ")
 
+    # Prevent duplicate video entries
     if video_already_present(video_name):
         print("-" * sub_sign_count)
         print("Video with this Name Already Present!!!\nFailed to Add!!!")
@@ -61,16 +70,17 @@ def add_video():
 
     print("-" * sub_sign_count)
 
-    # Insert the new video into the database
+    # Insert the video into MongoDB
     video_collections.insert_one({
         "video_name": video_name,
-        "video_duration":video_duration
-        })
+        "video_duration": video_duration
+    })
 
     print("Video Added Successfully...")
     print("-" * sub_sign_count)
 
-# Update an existing video’s title and duration by its ID
+# ---------------------- Update Existing Video ----------------------
+
 def update_video():
     list_all_Videos()
     print("-" * sub_sign_count)
@@ -78,9 +88,9 @@ def update_video():
     print("-" * sub_sign_count)
 
     video_index = ObjectId(input("Enter Video ID: "))
-    
     isFound = False
-    
+
+    # Check if video with given ID exists
     for video in video_collections.find():
         if video["_id"] == video_index:
             isFound = True
@@ -91,22 +101,21 @@ def update_video():
         video_name = input("Enter Video's New Title: ")
         video_duration = input("Enter Video's New Duration: ")
         
+        # Prevent overwriting with an existing title
         if video_already_present(video_name):
             print("-" * sub_sign_count)
             print("Video with this Name Already Present!!!\nFailed to Add!!!")
             print("-" * sub_sign_count)
             return
-        
-        # Update the selected video in the database
-        video_collections.update_one({
-            "_id":video_index
-        },{
-            "$set":
-            {
-            "video_name":video_name,
-            "video_duration":video_duration
-            }
-        })
+
+        # Update the video document in MongoDB
+        video_collections.update_one(
+            {"_id": video_index},
+            {"$set": {
+                "video_name": video_name,
+                "video_duration": video_duration
+            }}
+        )
 
         print("-" * sub_sign_count)
         print("Video Updated Successfully...")
@@ -116,7 +125,8 @@ def update_video():
         print("ID Not Found!!!\nFailed to Update Video!!!")
         print("-" * sub_sign_count)
 
-# Delete a video by its ID
+# ---------------------- Delete a Video ----------------------
+
 def delete_video():
     list_all_Videos()
     print("-" * sub_sign_count)
@@ -124,20 +134,19 @@ def delete_video():
     print("-" * sub_sign_count)
 
     video_index = ObjectId(input("Enter Video ID: "))
-    
     isFound = False
-    
+
+    # Check if the video exists
     for video in video_collections.find():
         if video["_id"] == video_index:
             isFound = True
             break
-       
-
 
     if isFound:
         print("-" * sub_sign_count)
-        # Delete the video from the database
-        video_collections.delete_one({"_id":video_index})
+
+        # Remove the video from MongoDB
+        video_collections.delete_one({"_id": video_index})
 
         print("-" * sub_sign_count)
         print("Video Deleted Successfully...")
@@ -147,13 +156,14 @@ def delete_video():
         print("ID Not Found!!!\nFailed to Delete Video!!!")
         print("-" * sub_sign_count)
 
+# ---------------------- Main Menu ----------------------
 
 def main():
     while True:
-        sleep(sleep_time)        # Add delay for smoother transitions
-        os.system('cls')              # Clear terminal screen (Windows only)
+        sleep(sleep_time)
+        os.system('cls')  # Clear terminal (works on Windows)
 
-        # Display main menu
+        # Display main options
         print("-" * sub_sign_count)
         print("\tYoutube Videos Manager (MongoDB)")
         print("-" * sub_sign_count)
@@ -167,14 +177,14 @@ def main():
         option = input("Enter Option: ")
         print("-" * sub_sign_count)
 
-        # Match user option to corresponding function
+        # Route to selected operation
         match option:
             case '1':
                 sleep(sleep_time)
                 os.system('cls')
                 list_all_Videos()
                 print("\n" + "-" * sub_sign_count)
-                getpass.getpass("Press Enter Key to Continue ")  # Wait for user input
+                getpass.getpass("Press Enter Key to Continue ")
             case '2':
                 sleep(sleep_time)
                 os.system('cls')
@@ -197,6 +207,7 @@ def main():
                 sleep(sleep_time)
                 os.system('cls')
 
+# ---------------------- Entry Point ----------------------
 
 if __name__ == "__main__":
     main()
