@@ -15,10 +15,11 @@ video_collections = db["videos"]
 
 # Display all stored videos in a tabular format
 def list_all_Videos():
+    sub_sign_count = 100
     print("-" * sub_sign_count)
-    print("\tVIDEOS LIST MENU")
+    print("\t\t\tVIDEOS LIST MENU")
     print("-" * sub_sign_count)
-    print("ID\t\tName\t\tDuration(min)")
+    print("ID\t\t\t\tName\t\tDuration(min)")
     print("-" * sub_sign_count)
 
     for video in video_collections.find():
@@ -94,8 +95,11 @@ def update_video():
         video_collections.update_one({
             "_id":video_index
         },{
+            "$set":
+            {
             "video_name":video_name,
             "video_duration":video_duration
+            }
         })
 
         print("-" * sub_sign_count)
