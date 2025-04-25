@@ -9,18 +9,14 @@ from dotenv import load_dotenv      # To load environment variables from .env fi
 load_dotenv()
 
 # Fetch DB credentials securely
-db_username = os.environ.get("DB_USERNAME")
-db_password = os.environ.get("DB_PASSWORD")
+db_url = os.environ.get("DB_URL")
 
 # UI and delay settings
 sub_sign_count = 60
 sleep_time = 2
 
 # MongoDB connection (with certificate warning bypass)
-client = MongoClient(
-    f"mongodb+srv://{db_username}:{db_password}@tutorialcluster.1p9uugg.mongodb.net/",
-    tlsAllowInvalidCertificates=True
-)
+client = MongoClient( db_url, tlsAllowInvalidCertificates=True)
 
 # Select database and collection
 db = client["ytmanager"]
